@@ -9,7 +9,7 @@ from PIL import Image, JpegImagePlugin
 import hashlib
 import sys, os
 from zipfile import ZipFile
-from .imgproc import loadImage
+from imgproc import loadImage
 
 if sys.version_info[0] == 2:
     from six.moves.urllib.request import urlretrieve
