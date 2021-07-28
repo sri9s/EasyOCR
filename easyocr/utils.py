@@ -10,6 +10,8 @@ import hashlib
 import sys, os
 from zipfile import ZipFile
 from imgproc import loadImage
+import re
+import json
 
 if sys.version_info[0] == 2:
     from six.moves.urllib.request import urlretrieve
@@ -831,3 +833,64 @@ def set_result_with_confidence(result_list, origin_len):
         final_result.append(result)
 
     return final_result
+
+def ocr_regx():
+
+    r=re.compile("Na..?a.*")
+    r_gender=re.compile(".*LAKI.*")
+    r_gender_f=re.compile('Perempuan')
+
+    return r, r_gender, r_gender_f
+
+def gen_regx_matches(result):
+    req = {}
+    r, r_gender, r_gender_f = ocr_regx()
+    newlist = list(filter(r.match, result)) # Read Note below
+    newlist_gender = list(filter(r_gender.match, result)) # Read Note below
+    if 'Nama' in result:
+        print('Nama: 1', end=" ")
+        # print(result[result.index('Nama')+1])
+        text=result[result.index('Nama')+1]
+        req['name'] = text
+    elif len(newlist)>0:
+        # print(newlist, end=" ")
+        text=newlist[0]
+        req['name'] = text
+
+    else:
+        # print('Nama: 0', end=" ")
+        req['name'] = 'Name not found'
+    if 'Tgl.Lahir' in result:
+        # print('DOB: 1', end=" ")
+        req['birthdate'] = 'found'
+    else:
+        # print('DOB: 0', end=" ")
+        req['birthdate'] = 'not found'
+
+    if 'Alamat' in result:
+        # print('Alamat: 1', end=" ")
+        req['address'] = 'found'
+    else:
+        # print('Alamat: 0', end=" ")
+        req['address'] = 'not found'
+
+    if 'WANITA' in result:
+        # print('Gender: Female')
+        # text='Gender: Female' 
+        req['gender'] = 'female'
+
+    elif 'PRIA' in result:
+        # print('Gender: Male')
+        # text+='Gender: Male'
+        req['gender'] = 'male'
+
+    elif len(newlist_gender)>0:
+        # print(newlist_gender, end=" ")
+        text=newlist_gender
+        req['gender'] = text
+
+    else:
+        text='not found'
+        req['gender'] = text
+
+    return req
